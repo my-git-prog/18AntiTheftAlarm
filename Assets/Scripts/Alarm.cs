@@ -1,8 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class AntiTheftAlarm : MonoBehaviour
+public class Alarm : MonoBehaviour
 {
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private float _minVolume = 0f;
@@ -11,31 +10,28 @@ public class AntiTheftAlarm : MonoBehaviour
     [SerializeField] private float _volumeChangeTime = 1f;
 
     private bool isAlarm = false;
-    private float _currentVolume = 0f;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.GetComponent<TheftMover>() == null)
-            return;
-
-        StartCoroutine(GrowAlarmVolume());
+        if (collision.TryGetComponent(out TheftMover _theft))
+            StartCoroutine(TurnVolumeUp());
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.gameObject.GetComponent<TheftMover>() == null)
-            return;
-
-        StartCoroutine(LessAlarmVolume());
+        if (collision.TryGetComponent(out TheftMover _theft))
+            StartCoroutine(TurnVolumeDown());
     }
 
-    private IEnumerator GrowAlarmVolume()
+    private IEnumerator TurnVolumeUp()
     {
         isAlarm = true;
 
         if (_audioSource.isPlaying == false)
+        {
             _audioSource.volume = _minVolume;
             _audioSource.Play();
+        }
 
         var wait = new WaitForSeconds(_volumeChangeTime);
 
@@ -52,7 +48,7 @@ public class AntiTheftAlarm : MonoBehaviour
         yield break;
     }
 
-    private IEnumerator LessAlarmVolume()
+    private IEnumerator TurnVolumeDown()
     {
         isAlarm = false;
 
@@ -73,5 +69,4 @@ public class AntiTheftAlarm : MonoBehaviour
 
         yield break;
     }
-
 }

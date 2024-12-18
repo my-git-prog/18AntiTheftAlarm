@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-
 public class Alarm : MonoBehaviour
 {
     [SerializeField] private AudioSource _audioSource;

@@ -7,9 +7,9 @@ public class Alarm : MonoBehaviour
     [SerializeField] private float _minVolume = 0f;
     [SerializeField] private float _maxVolume = 1f;
     [SerializeField] private float _volumeChangeSpeed = 0.3f;
-
-    private bool _needTurnVolume = false;
-    private float _targetVolume = 0f;
+    [SerializeField] private bool _isActive = true;
+    
+    private Coroutine _coroutine;
 
     private void OnEnable()
     {
@@ -25,43 +25,46 @@ public class Alarm : MonoBehaviour
 
     private void StartAlarm()
     {
-        _targetVolume = _maxVolume;
-        TurnVolumeCoroutineStart();
+        TurnVolumeCoroutineStart(_maxVolume);
     }
 
     private void StopAlarm()
     {
-        _targetVolume = _minVolume;
-        TurnVolumeCoroutineStart();
+        TurnVolumeCoroutineStart(_minVolume);
     }
 
-    private void TurnVolumeCoroutineStart()
+    private void TurnVolumeCoroutineStart(float targetVolume)
     {
-        if(_needTurnVolume == false)
-            StartCoroutine(TurnVolume());
+        if(_coroutine != null)
+        {
+            StopCoroutine(_coroutine);
+        }
+
+        _coroutine = StartCoroutine(TurnVolume(targetVolume));
     }
 
-    private IEnumerator TurnVolume()
+    private IEnumerator TurnVolume(float targetVolume)
     {
-        _needTurnVolume = true;
-
         if (_audioSource.isPlaying == false)
         {
             _audioSource.volume = _minVolume;
             _audioSource.Play();
         }
 
-        while (_needTurnVolume)
+        while (_isActive)
         {
-            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, _targetVolume, _volumeChangeSpeed * Time.deltaTime);
+            _audioSource.volume = Mathf.MoveTowards(_audioSource.volume, targetVolume, _volumeChangeSpeed * Time.deltaTime);
 
-            if (_audioSource.volume == _targetVolume)
-                _needTurnVolume = false;
+            if (_audioSource.volume == targetVolume)
+            {
+                if (_audioSource.volume == _minVolume)
+                    _audioSource.Pause();
+
+                StopCoroutine(_coroutine);
+            }
 
             yield return null;
         }
 
-        if (_audioSource.volume == _minVolume)
-            _audioSource.Pause();
     }
 }
